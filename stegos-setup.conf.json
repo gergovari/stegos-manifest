@@ -32,7 +32,7 @@
     },
     "stegos": {
       "git-remote": {
-        "remotes": { "origin": { "uri": "https://github.com/YOUR_USERNAME/stegos.git" } },
+        "remotes": { "origin": { "uri": "https://github.com/gergovari/stegos.git" } },
         "rev": "wrynose"
       },
       "path": "stegos"
