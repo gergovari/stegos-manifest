@@ -1,0 +1,33 @@
+{
+  "version": "0.1",
+  "sources": {
+    "openembedded-core": {
+      "git-remote": {
+        "remotes": { "origin": { "uri": "https://git.openembedded.org/openembedded-core" } },
+        "rev": "wrynose"
+      },
+      "path": "openembedded-core"
+    },
+    "meta-openembedded": {
+      "git-remote": {
+        "remotes": { "origin": { "uri": "https://git.openembedded.org/meta-openembedded" } },
+        "rev": "wrynose"
+      },
+      "path": "meta-openembedded"
+    },
+    "meta-virtualization": {
+      "git-remote": {
+        "remotes": { "origin": { "uri": "https://git.yoctoproject.org/meta-virtualization" } },
+        "rev": "wrynose"
+      },
+      "path": "meta-virtualization"
+    },
+    "stegos": {
+      "git-remote": {
+        "remotes": { "origin": { "uri": "https://github.com/gergovari/stegos.git" } },
+        "rev": "wrynose"
+      },
+      "path": "stegos/meta-stegos"
+    }
+  }
+}
