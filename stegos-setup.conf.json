@@ -1,5 +1,6 @@
 {
   "version": "0.1",
+  "description": "StegOS Environment Initialization Manifest",
   "sources": {
     "openembedded-core": {
       "git-remote": {
@@ -27,7 +28,24 @@
         "remotes": { "origin": { "uri": "https://github.com/gergovari/stegos.git" } },
         "rev": "wrynose"
       },
-      "path": "stegos/meta-stegos"
+      "path": "stegos"
     }
+  },
+  "bitbake-setup": {
+    "configurations": [
+      {
+        "name": "stegos",
+        "description": "The default StegOS build environment",
+        "bb-layers": [
+          "openembedded-core/meta",
+          "meta-openembedded/meta-oe",
+          "meta-openembedded/meta-networking",
+          "meta-openembedded/meta-filesystems",
+          "meta-virtualization",
+          "stegos/meta-stegos"
+        ],
+        "setup-dir-name": "stegos-build"
+      }
+    ]
   }
 }
