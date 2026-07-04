@@ -9,6 +9,13 @@
       },
       "path": "bitbake"
     },
+    "meta-openrc": {
+      "git-remote": {
+        "remotes": { "origin": { "uri": "https://github.com/jsbronder/meta-openrc.git" } },
+        "rev": "master"
+      },
+      "path": "meta-openrc"
+    },
     "openembedded-core": {
       "git-remote": {
         "remotes": { "origin": { "uri": "https://git.openembedded.org/openembedded-core" } },
