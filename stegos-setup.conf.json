@@ -46,6 +46,7 @@
         "bb-layers": [
           "openembedded-core/meta",
           "meta-openembedded/meta-oe",
+          "meta-openembedded/meta-python",
           "meta-openembedded/meta-networking",
           "meta-openembedded/meta-filesystems",
           "meta-virtualization",
