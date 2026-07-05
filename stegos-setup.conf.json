@@ -32,7 +32,7 @@
 		},
 		"meta-selinux": {
 			"url": "https://git.yoctoproject.org/git/meta-selinux",
-			"branch": "scarthgap",
+			"branch": "wrynose",
 			"revision": "HEAD",
 			"path": "meta-selinux"
 		},
