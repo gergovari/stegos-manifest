@@ -31,9 +31,14 @@
 			"path": "meta-virtualization"
 		},
 		"meta-selinux": {
-			"url": "https://git.yoctoproject.org/git/meta-selinux",
-			"branch": "wrynose",
-			"revision": "HEAD",
+			"git-remote": {
+				"remotes": {
+					"origin": {
+						"uri": "https://git.yoctoproject.org/git/meta-selinux"
+					}
+				},
+				"rev": "wrynose"
+			},
 			"path": "meta-selinux"
 		},
 		"stegos": {
