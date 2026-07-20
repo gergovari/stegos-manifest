@@ -1,0 +1,22 @@
+#!/bin/bash
+# Runs the StegOS Live CD in QEMU
+
+# Ensure we are in a bitbake environment
+if ! command -v runqemu &> /dev/null; then
+    echo "Error: runqemu command not found."
+    echo "Did you source the environment? Run: . stegos-env"
+    exit 1
+fi
+
+GRAPHIC_MODE="nographic"
+
+if [ "$1" == "--gui" ] || [ "$1" == "-g" ]; then
+    GRAPHIC_MODE=""
+fi
+
+echo "=> Running stegos-livecd in QEMU..."
+if [ -n "$GRAPHIC_MODE" ]; then
+    echo "   (Tip: Press Ctrl-A then X to exit nographic mode)"
+fi
+
+runqemu stegos_qemu-oe-linux $GRAPHIC_MODE

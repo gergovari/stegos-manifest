@@ -1,0 +1,50 @@
+#!/bin/bash
+# Synchronizes local changes in stegos, stegos-utils, and stegos-manifest and updates bitbake-setup
+
+WORKSPACE="$(cd "$(dirname "$0")/../.." && pwd)"
+
+sync_repo() {
+    local REPO_DIR="$1"
+    if [ -d "$WORKSPACE/$REPO_DIR/.git" ]; then
+        cd "$WORKSPACE/$REPO_DIR" || exit 1
+        
+        # Check if there are changes (including untracked files)
+        if [ -n "$(git status --porcelain)" ]; then
+            echo ""
+            echo "=================================================="
+            echo "=> Changes detected in: $REPO_DIR"
+            echo "=================================================="
+            git status -s
+            echo ""
+            
+            read -r -p "Enter commit message for $REPO_DIR: " MSG
+            
+            if [ -n "$MSG" ]; then
+                git add -A
+                git commit -m "$MSG"
+                echo "=> Pushing $REPO_DIR to remote..."
+                git push
+            else
+                echo "=> No commit message provided. Skipping commit for $REPO_DIR."
+            fi
+        fi
+        
+        # Pull any remote changes just in case
+        git pull --rebase &>/dev/null
+    else
+        echo "=> No local repo found at $WORKSPACE/$REPO_DIR"
+    fi
+}
+
+sync_repo "stegos"
+sync_repo "stegos-utils"
+sync_repo "stegos-manifest"
+
+echo ""
+echo "=================================================="
+echo "=> Running bitbake-setup update..."
+echo "=================================================="
+cd "$WORKSPACE" || exit 1
+bitbake-setup update --setup-dir ./bitbake-builds/stegos-setup-stegos
+
+echo "=> Sync complete."
