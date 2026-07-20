@@ -9,14 +9,40 @@ if ! command -v runqemu &> /dev/null; then
 fi
 
 GRAPHIC_MODE="nographic"
+QEMU_PARAMS=""
 
-if [ "$1" == "--gui" ] || [ "$1" == "-g" ]; then
-    GRAPHIC_MODE=""
-fi
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --gui|-g)
+            GRAPHIC_MODE=""
+            shift
+            ;;
+        --drive|-d)
+            if [ -n "$2" ]; then
+                # Use virtio-blk for the extra drive so it shows up as /dev/vd*
+                QEMU_PARAMS="$QEMU_PARAMS -drive file=$2,format=raw,if=virtio"
+                shift 2
+            else
+                echo "Error: --drive requires a path to an image file."
+                exit 1
+            fi
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            echo "Usage: stegos-run [--gui|-g] [--drive|-d <image_file>]"
+            exit 1
+            ;;
+    esac
+done
 
 echo "=> Running stegos-livecd in QEMU..."
 if [ -n "$GRAPHIC_MODE" ]; then
     echo "   (Tip: Press Ctrl-A then X to exit nographic mode)"
 fi
 
-runqemu snapshot $GRAPHIC_MODE
+if [ -n "$QEMU_PARAMS" ]; then
+    echo "   (Attached virtual drives: $QEMU_PARAMS)"
+    runqemu snapshot $GRAPHIC_MODE qemuparams="$QEMU_PARAMS"
+else
+    runqemu snapshot $GRAPHIC_MODE
+fi

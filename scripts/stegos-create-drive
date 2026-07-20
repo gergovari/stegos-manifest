@@ -1,0 +1,29 @@
+#!/bin/bash
+# Creates a virtual drive for testing stegmap
+
+if [ -z "$1" ] || [ -z "$2" ]; then
+    echo "Usage: stegos-create-drive <filename.img> <label> [size_in_mb]"
+    echo "Example: stegos-create-drive my_drive.img stegos.mygroup 100"
+    exit 1
+fi
+
+IMG_FILE="$1"
+LABEL="$2"
+SIZE="${3:-100}"
+
+echo "=> Creating ${SIZE}MB image file $IMG_FILE..."
+dd if=/dev/zero of="$IMG_FILE" bs=1M count="$SIZE" status=none
+
+echo "=> Formatting as ext4 with label '$LABEL'..."
+mkfs.ext4 -L "$LABEL" -q "$IMG_FILE"
+
+echo "=> Creating stegmap folder structure..."
+TMP_MNT=$(mktemp -d)
+sudo mount -o loop "$IMG_FILE" "$TMP_MNT"
+sudo mkdir -p "$TMP_MNT/repos" "$TMP_MNT/containers" "$TMP_MNT/conf"
+sudo chown -R $USER:$USER "$TMP_MNT"
+sudo umount "$TMP_MNT"
+rmdir "$TMP_MNT"
+
+echo "=> Success! You can now run:"
+echo "   stegos-run --drive $IMG_FILE"
