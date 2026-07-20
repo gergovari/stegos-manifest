@@ -19,4 +19,4 @@ if [ -n "$GRAPHIC_MODE" ]; then
     echo "   (Tip: Press Ctrl-A then X to exit nographic mode)"
 fi
 
-runqemu stegos_qemu-oe-linux $GRAPHIC_MODE
+runqemu snapshot $GRAPHIC_MODE
