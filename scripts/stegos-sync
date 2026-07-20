@@ -1,50 +1,87 @@
-#!/bin/bash
-# Synchronizes local changes in stegos, stegos-utils, and stegos-manifest and updates bitbake-setup
+#!/usr/bin/env python3
+import os
+import sys
+import argparse
+import subprocess
 
-WORKSPACE="$(cd "$(dirname "$0")/../.." && pwd)"
+def print_header(msg):
+    print(f"\n==================================================")
+    print(f"=> {msg}")
+    print(f"==================================================")
 
-sync_repo() {
-    local REPO_DIR="$1"
-    if [ -d "$WORKSPACE/$REPO_DIR/.git" ]; then
-        cd "$WORKSPACE/$REPO_DIR" || exit 1
+def sync_repo(workspace, repo_dir, message):
+    repo_path = os.path.join(workspace, repo_dir)
+    git_dir = os.path.join(repo_path, ".git")
+    
+    if not os.path.isdir(git_dir):
+        print(f"=> No local repo found at {repo_path}")
+        return
+
+    # Check for changes
+    status_proc = subprocess.run(["git", "status", "--porcelain"], cwd=repo_path, capture_output=True, text=True)
+    if status_proc.returncode != 0:
+        print(f"Error checking git status in {repo_dir}")
+        return
         
-        # Check if there are changes (including untracked files)
-        if [ -n "$(git status --porcelain)" ]; then
-            echo ""
-            echo "=================================================="
-            echo "=> Changes detected in: $REPO_DIR"
-            echo "=================================================="
-            git status -s
-            echo ""
-            
-            read -r -p "Enter commit message for $REPO_DIR: " MSG
-            
-            if [ -n "$MSG" ]; then
-                git add -A
-                git commit -m "$MSG"
-                echo "=> Pushing $REPO_DIR to remote..."
-                git push
-            else
-                echo "=> No commit message provided. Skipping commit for $REPO_DIR."
-            fi
-        fi
+    output = status_proc.stdout.strip()
+    if output:
+        print_header(f"Changes detected in: {repo_dir}")
+        subprocess.run(["git", "status", "-s"], cwd=repo_path)
+        print("")
         
-        # Pull any remote changes just in case
-        git pull --rebase &>/dev/null
-    else
-        echo "=> No local repo found at $WORKSPACE/$REPO_DIR"
-    fi
-}
+        commit_msg = message
+        if not commit_msg:
+            try:
+                commit_msg = input(f"Enter commit message for {repo_dir} (leave blank to skip): ").strip()
+            except KeyboardInterrupt:
+                print("\nSync aborted.")
+                sys.exit(1)
+            except EOFError:
+                print("\nSync aborted.")
+                sys.exit(1)
+                
+        if commit_msg:
+            subprocess.run(["git", "add", "-A"], cwd=repo_path, check=True)
+            subprocess.run(["git", "commit", "-m", commit_msg], cwd=repo_path, check=True)
+            print(f"=> Pushing {repo_dir} to remote...")
+            subprocess.run(["git", "push"], cwd=repo_path, check=True)
+        else:
+            print(f"=> No commit message provided. Skipping commit for {repo_dir}.")
+            
+    # Pull remote changes regardless
+    subprocess.run(["git", "pull", "--rebase"], cwd=repo_path, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-sync_repo "stegos"
-sync_repo "stegos-utils"
-sync_repo "stegos-manifest"
+def main():
+    parser = argparse.ArgumentParser(description="Synchronizes local StegOS repositories and updates the bitbake setup.")
+    parser.add_argument("--message", "-m", help="Commit message to use for all repos with changes (bypasses interactive prompt)")
+    parser.add_argument("--repo", "-r", help="Specific repository to sync (e.g., 'stegos' or 'stegos-utils'). Defaults to all.")
+    
+    args = parser.parse_args()
+    
+    # Locate workspace relative to this script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    workspace = os.path.abspath(os.path.join(script_dir, "../.."))
+    
+    repos_to_sync = ["stegos", "stegos-utils", "stegos-manifest"]
+    if args.repo:
+        if args.repo not in repos_to_sync:
+            print(f"Warning: '{args.repo}' is not a standard repo, but will try syncing it anyway.")
+        repos_to_sync = [args.repo]
+        
+    for repo in repos_to_sync:
+        sync_repo(workspace, repo, args.message)
+        
+    print_header("Running bitbake-setup update...")
+    try:
+        subprocess.run(["bitbake-setup", "update", "--setup-dir", "./bitbake-builds/stegos-setup-stegos"], cwd=workspace, check=True)
+    except FileNotFoundError:
+        print("Error: bitbake-setup command not found. Ensure it is installed on your host system.")
+        sys.exit(1)
+    except subprocess.CalledProcessError:
+        print("Error: bitbake-setup update failed.")
+        sys.exit(1)
+        
+    print("\n=> Sync complete.")
 
-echo ""
-echo "=================================================="
-echo "=> Running bitbake-setup update..."
-echo "=================================================="
-cd "$WORKSPACE" || exit 1
-bitbake-setup update --setup-dir ./bitbake-builds/stegos-setup-stegos
-
-echo "=> Sync complete."
+if __name__ == "__main__":
+    main()

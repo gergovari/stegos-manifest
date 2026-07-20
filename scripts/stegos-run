@@ -1,48 +1,46 @@
-#!/bin/bash
-# Runs the StegOS Live CD in QEMU
+#!/usr/bin/env python3
+import sys
+import argparse
+import subprocess
+import shutil
 
-# Ensure we are in a bitbake environment
-if ! command -v runqemu &> /dev/null; then
-    echo "Error: runqemu command not found."
-    echo "Did you source the environment? Run: . stegos-env"
-    exit 1
-fi
+def main():
+    parser = argparse.ArgumentParser(description="Runs the StegOS Live CD in QEMU.")
+    parser.add_argument("-g", "--gui", action="store_true", help="Launch QEMU with a graphical window (defaults to nographic)")
+    parser.add_argument("-d", "--drive", action="append", help="Mount a virtual drive as a virtio block device (can be used multiple times)")
+    
+    args = parser.parse_args()
+    
+    if not shutil.which("runqemu"):
+        print("Error: runqemu command not found in your PATH.")
+        print("Did you source the environment? Run: . stegos-env")
+        sys.exit(1)
+        
+    cmd_args = ["runqemu", "snapshot"]
+    
+    if not args.gui:
+        cmd_args.append("nographic")
+        print("=> Running stegos-livecd in QEMU... (Tip: Press Ctrl-A then X to exit nographic mode)")
+    else:
+        print("=> Running stegos-livecd in QEMU... (GUI mode)")
+        
+    if args.drive:
+        qemu_params = []
+        for img in args.drive:
+            qemu_params.append(f"-drive file={img},format=raw,if=virtio")
+            
+        full_params = " ".join(qemu_params)
+        print(f"   (Attached virtual drives: {full_params})")
+        cmd_args.append(f"qemuparams={full_params}")
+        
+    try:
+        subprocess.run(cmd_args, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"\nError: runqemu exited with code {e.returncode}")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\nQEMU stopped by user.")
+        sys.exit(0)
 
-GRAPHIC_MODE="nographic"
-QEMU_PARAMS=""
-
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --gui|-g)
-            GRAPHIC_MODE=""
-            shift
-            ;;
-        --drive|-d)
-            if [ -n "$2" ]; then
-                # Use virtio-blk for the extra drive so it shows up as /dev/vd*
-                QEMU_PARAMS="$QEMU_PARAMS -drive file=$2,format=raw,if=virtio"
-                shift 2
-            else
-                echo "Error: --drive requires a path to an image file."
-                exit 1
-            fi
-            ;;
-        *)
-            echo "Unknown argument: $1"
-            echo "Usage: stegos-run [--gui|-g] [--drive|-d <image_file>]"
-            exit 1
-            ;;
-    esac
-done
-
-echo "=> Running stegos-livecd in QEMU..."
-if [ -n "$GRAPHIC_MODE" ]; then
-    echo "   (Tip: Press Ctrl-A then X to exit nographic mode)"
-fi
-
-if [ -n "$QEMU_PARAMS" ]; then
-    echo "   (Attached virtual drives: $QEMU_PARAMS)"
-    runqemu snapshot $GRAPHIC_MODE qemuparams="$QEMU_PARAMS"
-else
-    runqemu snapshot $GRAPHIC_MODE
-fi
+if __name__ == "__main__":
+    main()

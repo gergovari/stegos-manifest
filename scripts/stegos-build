@@ -1,12 +1,36 @@
-#!/bin/bash
-# Builds the StegOS Live CD
+#!/usr/bin/env python3
+import sys
+import argparse
+import subprocess
+import shutil
 
-# Ensure we are in a bitbake environment
-if ! command -v bitbake &> /dev/null; then
-    echo "Error: bitbake command not found."
-    echo "Did you source the environment? Run: . stegos-env"
-    exit 1
-fi
+def main():
+    parser = argparse.ArgumentParser(description="Builds StegOS BitBake recipes.")
+    parser.add_argument("recipe", nargs="?", default="stegos-livecd", help="The recipe to build (defaults to stegos-livecd)")
+    parser.add_argument("-c", "--cmd", help="Execute a specific task (e.g. clean, cleanall, compile)")
+    
+    args = parser.parse_args()
+    
+    if not shutil.which("bitbake"):
+        print("Error: bitbake command not found in your PATH.")
+        print("Did you source the environment? Run: . stegos-env")
+        sys.exit(1)
+        
+    cmd_args = ["bitbake", args.recipe]
+    if args.cmd:
+        cmd_args.insert(1, "-c")
+        cmd_args.insert(2, args.cmd)
+        
+    print(f"=> Executing: {' '.join(cmd_args)}")
+    
+    try:
+        subprocess.run(cmd_args, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"\nError: bitbake exited with code {e.returncode}")
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\nBuild aborted by user.")
+        sys.exit(1)
 
-echo "=> Building stegos-livecd..."
-bitbake stegos-livecd
+if __name__ == "__main__":
+    main()
