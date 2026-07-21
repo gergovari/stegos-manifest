@@ -2,19 +2,15 @@
 import sys
 import argparse
 import subprocess
-import os
-import tempfile
 
 def main():
-    parser = argparse.ArgumentParser(description="Creates a virtual drive for testing stegmap.")
+    parser = argparse.ArgumentParser(description="Creates a raw virtual drive file for testing stegmap.")
     parser.add_argument("filename", help="Path to the output image file (e.g. my_drive.img)")
-    parser.add_argument("--label", required=True, help="Ext4 partition label (e.g. stegos.mygroup)")
     parser.add_argument("--size", type=int, default=100, help="Size of the image in MB (defaults to 100)")
     
     args = parser.parse_args()
     
     img_file = args.filename
-    label = args.label
     size = args.size
     
     print(f"=> Creating {size}MB image file {img_file}...")
@@ -24,37 +20,10 @@ def main():
         print("Error: Failed to create image file.")
         sys.exit(1)
         
-    print(f"=> Formatting as ext4 with label '{label}'...")
-    try:
-        subprocess.run(["mkfs.ext4", "-L", label, "-q", img_file], check=True)
-    except subprocess.CalledProcessError:
-        print("Error: Failed to format image file.")
-        sys.exit(1)
-        
-    print("=> Creating stegmap folder structure...")
-    tmp_mnt = tempfile.mkdtemp()
-    
-    try:
-        # Requires sudo
-        subprocess.run(["sudo", "mount", "-o", "loop", img_file, tmp_mnt], check=True)
-        
-        repos_dir = os.path.join(tmp_mnt, "repos")
-        containers_dir = os.path.join(tmp_mnt, "containers")
-        conf_dir = os.path.join(tmp_mnt, "conf")
-        
-        subprocess.run(["sudo", "mkdir", "-p", repos_dir, containers_dir, conf_dir], check=True)
-        
-        user = os.environ.get("USER", "root")
-        subprocess.run(["sudo", "chown", "-R", f"{user}:{user}", tmp_mnt], check=True)
-        
-    except subprocess.CalledProcessError:
-        print("Error: Failed to modify folder structure.")
-    finally:
-        subprocess.run(["sudo", "umount", tmp_mnt], check=False)
-        os.rmdir(tmp_mnt)
-        
     print("\n=> Success! You can now run:")
     print(f"   stegos-run --drive {img_file}")
+    print("=> Inside QEMU, run the guest utility to format and initialize it:")
+    print("   steggroup init /dev/vdb --name mygroup")
 
 if __name__ == "__main__":
     main()
