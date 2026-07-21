@@ -16,7 +16,14 @@ def main():
         print("Did you source the environment? Run: . stegos-env")
         sys.exit(1)
         
-    cmd_args = ["runqemu", "iso"]
+    cmd_args = ["runqemu", "iso", "slirp"]
+    
+    # Forward ports for reverse proxy testing
+    cmd_args.append("hostfwd=tcp::8080-:80")
+    cmd_args.append("hostfwd=tcp::8443-:443")
+    
+    # Silence Yocto ISO boot warnings
+    cmd_args.append("bootparams=quiet loglevel=3")
     
     if not args.gui:
         cmd_args.append("nographic")

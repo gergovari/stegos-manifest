@@ -27,3 +27,7 @@ else
     echo "Error: Build environment not found."
     echo "Have you run bitbake-setup?"
 fi
+
+if [ -f "$WORKSPACE/stegos-manifest/scripts/stegos-completion.bash" ]; then
+    source "$WORKSPACE/stegos-manifest/scripts/stegos-completion.bash"
+fi
