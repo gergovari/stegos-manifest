@@ -1,10 +1,10 @@
 #!/bin/bash
-# Source this file to activate the StegOS environment
+# Source this file to activate the stegOS environment
 
 if [[ "$1" == "--help" || "$1" == "-h" ]]; then
     echo "Usage: . stegos-env"
     echo ""
-    echo "Activates the StegOS developer environment by sourcing the BitBake"
+    echo "Activates the stegOS developer environment by sourcing the BitBake"
     echo "initialization script and adding the workflow scripts to your PATH."
     echo ""
     echo "Note: This script MUST be sourced, not executed."

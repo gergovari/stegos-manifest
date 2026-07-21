@@ -1,6 +1,6 @@
 {
 	"version": "0.1",
-	"description": "StegOS Environment Initialization Manifest",
+	"description": "stegOS Environment Initialization Manifest",
 	"sources": {
 		"bitbake": {
 			"git-remote": {
@@ -53,7 +53,7 @@
 		"configurations": [
 			{
 				"name": "stegos",
-				"description": "The default StegOS build environment.",
+				"description": "The default stegOS build environment.",
 				"bb-layers": [
 					"openembedded-core/meta",
 					"meta-openembedded/meta-oe",

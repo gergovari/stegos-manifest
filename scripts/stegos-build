@@ -5,7 +5,7 @@ import subprocess
 import shutil
 
 def main():
-    parser = argparse.ArgumentParser(description="Builds StegOS BitBake recipes.")
+    parser = argparse.ArgumentParser(description="Builds stegOS BitBake recipes.")
     parser.add_argument("recipe", nargs="?", default="stegos-livecd", help="The recipe to build (defaults to stegos-livecd)")
     parser.add_argument("-c", "--cmd", help="Execute a specific task (e.g. clean, cleanall, compile)")
     

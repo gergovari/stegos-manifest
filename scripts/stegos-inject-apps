@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+import sys
+import argparse
+import subprocess
+import os
+import tempfile
+import time
+
+def main():
+    parser = argparse.ArgumentParser(description="Injects a repository into the /repos/ folder of a stegOS group image.")
+    parser.add_argument("image", help="Path to the stegOS group image file (e.g. data.img)")
+    
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    workspace_dir = os.path.dirname(os.path.dirname(script_dir))
+    default_apps_dir = os.path.join(workspace_dir, "stegos-apps-base")
+    
+    parser.add_argument("--repo", help=f"Path to the apps repository to inject (defaults to {default_apps_dir})", default=default_apps_dir)
+    
+    args = parser.parse_args()
+    
+    img_file = args.image
+    repo_dir = args.repo
+    
+    if not os.path.isfile(img_file):
+        print(f"Error: Image file '{img_file}' does not exist.")
+        sys.exit(1)
+        
+    if not os.path.isdir(repo_dir):
+        print(f"Error: Apps repository '{repo_dir}' does not exist.")
+        sys.exit(1)
+        
+    print(f"=> Injecting '{os.path.basename(repo_dir)}' into '{img_file}'...")
+    
+    tmp_mnt = tempfile.mkdtemp(prefix="stegos_inject_")
+    
+    try:
+        # Require sudo for loop mount
+        print("   (Requesting sudo privileges for loop mount...)")
+        try:
+            subprocess.run(["sudo", "mount", "-o", "loop", img_file, tmp_mnt], check=True, stderr=subprocess.PIPE, text=True)
+        except subprocess.CalledProcessError as e:
+            print(f"\n   Error: Failed to mount '{img_file}'.")
+            print("   Possible reasons:")
+            print("   1. The image is unformatted. You must run 'steggroup init' on it inside QEMU first!")
+            print("   2. QEMU is still running! You CANNOT mount a drive on your host while QEMU is actively using it.")
+            print(f"   (Mount details: {e.stderr.strip()})")
+            sys.exit(1)
+        
+        target_repos_dir = os.path.join(tmp_mnt, "repos")
+        if not os.path.isdir(target_repos_dir):
+            print(f"   Error: Image does not contain a /repos/ directory.")
+            print("   Did you run 'steggroup init' inside QEMU on this drive yet?")
+            sys.exit(1)
+            
+        target_dest = os.path.join(target_repos_dir, os.path.basename(repo_dir))
+        
+        print(f"   Copying files to {target_dest}...")
+        
+        # We need to copy as root since the mount is owned by root on the host
+        # but we also need to ensure the steguser (UID 1000) owns it when booted in the VM
+        
+        # Remove it if it already exists to allow clean updates
+        if os.path.exists(target_dest):
+            subprocess.run(["sudo", "rm", "-rf", target_dest], check=True)
+            
+        subprocess.run(["sudo", "cp", "-r", repo_dir, target_dest], check=True)
+        
+        # StegOS steguser is typically UID 1000
+        subprocess.run(["sudo", "chown", "-R", "1000:1000", target_dest], check=True)
+        
+        print("=> Injection successful!")
+        
+    except subprocess.CalledProcessError as e:
+        print(f"\nError: Operation failed with code {e.returncode}")
+        sys.exit(1)
+    finally:
+        print("   Cleaning up mount...")
+        for _ in range(3):
+            res = subprocess.run(["sudo", "umount", tmp_mnt], stderr=subprocess.DEVNULL)
+            if res.returncode == 0:
+                break
+            time.sleep(1)
+        os.rmdir(tmp_mnt)
+
+if __name__ == "__main__":
+    main()

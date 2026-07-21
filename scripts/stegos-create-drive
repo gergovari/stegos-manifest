@@ -23,7 +23,7 @@ def main():
     print("\n=> Success! You can now run:")
     print(f"   stegos-run --drive {img_file}")
     print("=> Inside QEMU, run the guest utility to format and initialize it:")
-    print("   steggroup init /dev/vdb --name mygroup")
+    print("   steggroup init /dev/sda --name mygroup")
 
 if __name__ == "__main__":
     main()
