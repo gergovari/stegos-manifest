@@ -18,10 +18,6 @@ def main():
         
     cmd_args = ["runqemu", "iso", "slirp"]
     
-    # Forward ports for reverse proxy testing
-    cmd_args.append("hostfwd=tcp::8080-:80")
-    cmd_args.append("hostfwd=tcp::8443-:443")
-    
     # Silence Yocto ISO boot warnings
     cmd_args.append("bootparams=quiet loglevel=3")
     
@@ -31,13 +27,18 @@ def main():
     else:
         print("=> Running stegos-livecd in QEMU... (GUI mode)")
         
+    qemu_params = [
+        "-netdev user,id=proxy,hostfwd=tcp::8080-:80,hostfwd=tcp::8443-:443",
+        "-device virtio-net-pci,netdev=proxy"
+    ]
+    
     if args.drive:
-        qemu_params = []
         for img in args.drive:
             qemu_params.append(f"-drive file={img},format=raw,if=virtio")
             
+    if qemu_params:
         full_params = " ".join(qemu_params)
-        print(f"   (Attached virtual drives: {full_params})")
+        print(f"   (QEMU Params: {full_params})")
         cmd_args.append(f"qemuparams={full_params}")
         
     try:

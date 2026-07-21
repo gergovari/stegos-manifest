@@ -73,7 +73,7 @@ def main():
         
     print_header("Running bitbake-setup update...")
     try:
-        subprocess.run(["bitbake-setup", "update", "--setup-dir", "./bitbake-builds/stegos-setup-stegos"], cwd=workspace, check=True)
+        subprocess.run(["bitbake-setup", "update", "--setup-dir", "./bitbake-builds/stegos-setup-stegos", "--update-bb-conf", "no"], cwd=workspace, check=True)
     except FileNotFoundError:
         print("Error: bitbake-setup command not found. Ensure it is installed on your host system.")
         sys.exit(1)
