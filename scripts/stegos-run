@@ -40,9 +40,10 @@ def main():
         
     import os
     env = os.environ.copy()
-    # Inject port forwarding without breaking default SLIRP options (like tftp).
-    # We remove dns=8.8.8.8 because it breaks QEMU SLIRP's internal IP mapping. DNS is handled by resolv.conf inside the VM.
-    env["QB_SLIRP_OPT"] = "-netdev user,id=net0,hostfwd=tcp::8080-:80,hostfwd=tcp::8443-:443"
+    # We must explicitly set dns=8.8.8.8 so that QEMU's SLIRP intercepts requests sent to 8.8.8.8
+    # by the VM and proxies them to the host's native resolver (e.g. 127.0.0.53) to bypass
+    # strict outbound UDP 53 firewall rules on the host machine.
+    env["QB_SLIRP_OPT"] = "-netdev user,id=net0,dns=8.8.8.8,hostfwd=tcp::8080-:80,hostfwd=tcp::8443-:443"
     
     try:
         subprocess.run(cmd_args, env=env, check=True)
