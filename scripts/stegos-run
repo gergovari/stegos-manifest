@@ -27,10 +27,7 @@ def main():
     else:
         print("=> Running stegos-livecd in QEMU... (GUI mode)")
         
-    qemu_params = [
-        "-netdev user,id=proxy,hostfwd=tcp::8080-:80,hostfwd=tcp::8443-:443",
-        "-device virtio-net-pci,netdev=proxy"
-    ]
+    qemu_params = []
     
     if args.drive:
         for img in args.drive:
@@ -41,8 +38,14 @@ def main():
         print(f"   (QEMU Params: {full_params})")
         cmd_args.append(f"qemuparams={full_params}")
         
+    import os
+    env = os.environ.copy()
+    # Inject port forwarding directly into runqemu's default SLIRP interface
+    # This prevents creating a second NIC which breaks DNS resolving inside the VM
+    env["QB_SLIRP_OPT"] = "-netdev user,id=net0,hostfwd=tcp::8080-:80,hostfwd=tcp::8443-:443"
+    
     try:
-        subprocess.run(cmd_args, check=True)
+        subprocess.run(cmd_args, env=env, check=True)
     except subprocess.CalledProcessError as e:
         print(f"\nError: runqemu exited with code {e.returncode}")
         sys.exit(1)
