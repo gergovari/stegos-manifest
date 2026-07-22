@@ -42,7 +42,7 @@ def main():
     env = os.environ.copy()
     # Inject port forwarding directly into runqemu's default SLIRP interface
     # This prevents creating a second NIC which breaks DNS resolving inside the VM
-    env["QB_SLIRP_OPT"] = "-netdev user,id=net0,hostfwd=tcp::8080-:80,hostfwd=tcp::8443-:443"
+    env["QB_SLIRP_OPT"] = "-netdev user,id=net0,dns=8.8.8.8,hostfwd=tcp::8080-:80,hostfwd=tcp::8443-:443"
     
     try:
         subprocess.run(cmd_args, env=env, check=True)
