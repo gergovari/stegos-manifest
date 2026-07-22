@@ -3,6 +3,7 @@ import os
 import sys
 import argparse
 import subprocess
+import shutil
 
 def print_header(msg):
     print(f"\n==================================================")
@@ -123,6 +124,16 @@ def main():
             sys.exit(1)
     else:
         print("\n=> Skipping bitbake-setup update. Use --update-yocto to include it.")
+
+    # Clean the image recipe so bitbake picks up layer changes on the next build.
+    # This only removes the image recipe's work directory — all compiled packages
+    # stay in sstate, so the rebuild is fast (rootfs + ISO regeneration only).
+    if shutil.which("bitbake"):
+        print_header("Cleaning image cache...")
+        subprocess.run(
+            ["bitbake", "stegos-livecd", "-c", "clean"],
+            cwd=workspace, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
         
     print("\n=> Sync complete.")
 
