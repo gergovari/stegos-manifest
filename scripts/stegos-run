@@ -28,7 +28,7 @@ def main():
     else:
         print("=> Running stegos-livecd in QEMU... (GUI mode)")
         
-    qemu_params = []
+    qemu_params = ["-m 2048"]
     
     if args.drive:
         for img in args.drive:
