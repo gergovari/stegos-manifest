@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import sys
 import argparse
 import subprocess
@@ -38,13 +39,8 @@ def main():
         print(f"   (QEMU Params: {full_params})")
         cmd_args.append(f"qemuparams={full_params}")
         
-    import os
-    env = os.environ.copy()
-    # Inject port forwarding directly into runqemu's default SLIRP interface
-    env["QB_SLIRP_OPT"] = "-netdev user,id=net0,hostfwd=tcp::8080-:80,hostfwd=tcp::8443-:443,hostfwd=tcp::2222-:22"
-    
     try:
-        subprocess.run(cmd_args, env=env, check=True)
+        subprocess.run(cmd_args, check=True)
     except subprocess.CalledProcessError as e:
         print(f"\nError: runqemu exited with code {e.returncode}")
         sys.exit(1)
