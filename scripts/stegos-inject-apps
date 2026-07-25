@@ -15,6 +15,7 @@ def main():
     default_apps_dir = os.path.join(workspace_dir, "stegos-apps-base")
     
     parser.add_argument("--repo", help=f"Path to the apps repository to inject (defaults to {default_apps_dir})", default=default_apps_dir)
+    parser.add_argument("--uid", help="UID:GID to own the files in the image (defaults to 1000:1000)", default="1000:1000")
     
     args = parser.parse_args()
     
@@ -65,8 +66,8 @@ def main():
             
         subprocess.run(["sudo", "cp", "-r", repo_dir, target_dest], check=True)
         
-        # StegOS steguser is typically UID 1000
-        subprocess.run(["sudo", "chown", "-R", "1000:1000", target_dest], check=True)
+        # StegOS steguser is typically UID 1000, configurable via --uid
+        subprocess.run(["sudo", "chown", "-R", args.uid, target_dest], check=True)
         
         print("=> Injection successful!")
         

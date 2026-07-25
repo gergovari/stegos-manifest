@@ -66,7 +66,6 @@ def sync_repo(workspace, repo_dir, message):
             )
         except FileNotFoundError:
             # rsync not available, fall back to manual copy
-            import shutil
             # Remove old contents (except .git) and copy fresh
             for item in os.listdir(layer_dir):
                 if item == ".git":
