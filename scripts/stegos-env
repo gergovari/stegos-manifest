@@ -19,6 +19,22 @@ fi
 WORKSPACE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 export PATH="$WORKSPACE/stegos-manifest/scripts:$PATH"
 
+VENV_DIR="$WORKSPACE/stegos-manifest/.venv"
+if [ ! -d "$VENV_DIR" ]; then
+    echo "=> Creating Python virtual environment..."
+    python3 -m venv "$VENV_DIR"
+fi
+echo "=> Activating Python virtual environment..."
+source "$VENV_DIR/bin/activate"
+
+if [ -f "$WORKSPACE/stegos-manifest/requirements.txt" ]; then
+    pip install --quiet -r "$WORKSPACE/stegos-manifest/requirements.txt"
+fi
+if [ -f "$WORKSPACE/stegos-utils/requirements-test.txt" ]; then
+    pip install --quiet -r "$WORKSPACE/stegos-utils/requirements-test.txt"
+fi
+
+
 if [ -f "$WORKSPACE/bitbake-builds/stegos-setup-stegos/build/init-build-env" ]; then
     echo "=> Sourcing BitBake environment..."
     cd "$WORKSPACE/bitbake-builds/stegos-setup-stegos" || return 1

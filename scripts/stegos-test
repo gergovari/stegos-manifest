@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# stegos-test: A host script to run the stegos-utils test suite.
+
+# Find the absolute path to the workspace directory
+WORKSPACE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+UTILS_DIR="${WORKSPACE}/stegos-utils"
+
+echo "Running tests in ${UTILS_DIR}..."
+# Execute pytest with any arguments passed to the script, defaulting to tests/ and coverage.
+if [ $# -eq 0 ]; then
+    python3 -m pytest "${UTILS_DIR}/tests/" -v --cov="${UTILS_DIR}/lib/steglib" --cov-report=term-missing
+else
+    python3 -m pytest "$@"
+fi
