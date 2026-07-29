@@ -1,0 +1,59 @@
+#!/usr/bin/env python3
+import sys
+import argparse
+import subprocess
+import os
+
+def main():
+    parser = argparse.ArgumentParser(description="Enlarge a file-based image and resize its underlying filesystem.")
+    parser.add_argument("filename", help="Path to the image file to resize")
+    parser.add_argument("--size", default="1G", help="Size to enlarge the image by (e.g. 1G, 500M). Defaults to 1G.")
+    
+    args = parser.parse_args()
+    
+    img_file = args.filename
+    size = args.size
+    
+    if not os.path.exists(img_file):
+        print(f"Error: Image file '{img_file}' does not exist.")
+        sys.exit(1)
+        
+    print(f"=> Enlarging '{img_file}' by {size}...")
+    try:
+        subprocess.run(["truncate", "-s", f"+{size}", img_file], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Failed to enlarge image file (truncate exited with code {e.returncode}).")
+        sys.exit(1)
+    except FileNotFoundError:
+        print("Error: 'truncate' command not found.")
+        sys.exit(1)
+        
+    print(f"=> Checking filesystem on '{img_file}'...")
+    try:
+        # e2fsck might return non-zero if it fixes things (return code 1), 
+        # or it might complain if it's not an ext* filesystem.
+        res = subprocess.run(["e2fsck", "-f", "-y", img_file], capture_output=True, text=True)
+        if res.returncode not in [0, 1]:
+            print(f"Warning: e2fsck returned code {res.returncode}. Output:\n{res.stdout}\n{res.stderr}")
+    except FileNotFoundError:
+        print("Warning: 'e2fsck' not found, skipping filesystem check.")
+        
+    print(f"=> Resizing filesystem on '{img_file}'...")
+    try:
+        subprocess.run(["resize2fs", img_file], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error: Failed to resize filesystem (resize2fs exited with code {e.returncode}).")
+        print("Note: If this image is partitioned, you may need to resize the partition first, or this utility might only support raw ext2/3/4 filesystems.")
+        sys.exit(1)
+    except FileNotFoundError:
+        print("Error: 'resize2fs' command not found.")
+        sys.exit(1)
+        
+    print("\n=> Success! Image and filesystem have been resized.")
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nAborted by user.")
+        sys.exit(130)
