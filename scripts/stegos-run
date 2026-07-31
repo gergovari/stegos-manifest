@@ -12,15 +12,20 @@ def main():
     
     args = parser.parse_args()
     
-    if not shutil.which("runqemu"):
-        print("Error: runqemu command not found in your PATH.")
-        print("Did you source the environment? Run: . stegos-env")
+    import glob
+    
+    # Find the newest stegos-livecd qemuboot.conf in tmp/deploy/images
+    search_path = "tmp/deploy/images/*/stegos-livecd*.qemuboot.conf"
+    confs = glob.glob(search_path)
+    if not confs:
+        print("\\nError: Could not find any built 'stegos-livecd' image in tmp/deploy/images/")
+        print("Please run 'stegos-build' to generate the image first.")
         sys.exit(1)
         
-    cmd_args = ["runqemu", "stegos-livecd", "iso", "slirp", "kvm"]
+    # Get the newest configuration file
+    newest_conf = max(confs, key=os.path.getmtime)
     
-    # Silence Yocto ISO boot warnings
-    cmd_args.append("bootparams=quiet loglevel=3")
+    cmd_args = ["runqemu", newest_conf, "iso", "slirp", "kvm"]
     
     if not args.gui:
         cmd_args.append("nographic")
