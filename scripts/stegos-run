@@ -17,7 +17,7 @@ def main():
         print("Did you source the environment? Run: . stegos-env")
         sys.exit(1)
         
-    cmd_args = ["runqemu", "iso", "slirp", "kvm"]
+    cmd_args = ["runqemu", "stegos-livecd", "iso", "slirp", "kvm"]
     
     # Silence Yocto ISO boot warnings
     cmd_args.append("bootparams=quiet loglevel=3")
